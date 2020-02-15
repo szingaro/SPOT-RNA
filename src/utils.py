@@ -326,7 +326,7 @@ def prob_to_secondary_structure(ensemble_outputs, label_mask, seq, name, args):
     if args.motifs:
         try:
             os.chdir(args.outputs)
-            subprocess.Popen(['perl', '../bpRNA-master/bpRNA.pl', name + '.bpseq'])
+            subprocess.Popen(['perl', './bpRNA-master/bpRNA.pl', name + '.bpseq'])
         except:
             print(
                 '\nUnable to run bpRNA script;\nplease refer to "https://github.com/hendrixlab/bpRNA/" for system '
