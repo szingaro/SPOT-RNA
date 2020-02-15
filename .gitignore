@@ -1,5 +1,5 @@
 venv/
-models/
+SPOT-RNA-models/
 outputs/
 __pycache__/
 .idea/
