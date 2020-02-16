@@ -6,6 +6,8 @@ import numpy as np
 import tensorflow as tf
 from tqdm import tqdm
 
+base_path = os.path.dirname(os.path.realpath(__file__))
+
 
 # ------------- one hot encoding of RNA sequences -----------------#
 def one_hot(seq):
@@ -38,7 +40,7 @@ def l_mask(inp, seq_len):
 def get_data(seq):
     seq_len = len(seq)
     one_hot_feat = one_hot(seq)
-    print(one_hot_feat[-1])
+    # print(one_hot_feat[-1])
     zero_mask = z_mask(seq_len)[None, :, :, None]
     label_mask = l_mask(one_hot_feat, seq_len)
     temp = one_hot_feat[None, :, :]
@@ -76,7 +78,7 @@ def _bytes_feature(value):
 
 def create_tfr_files(all_seq):
     print('\nPreparing tfr records file for SPOT-RNA:')
-    path_tfrecords = os.path.join('input_tfr_files', "test_data" + ".tfrecords")
+    path_tfrecords = os.path.join(base_path, 'input_tfr_files', "test_data" + ".tfrecords")
     with open(all_seq) as file:
         input_data = [line.strip() for line in file.read().splitlines() if line.strip()]
 
@@ -308,28 +310,15 @@ def prob_to_secondary_structure(ensemble_outputs, label_mask, seq, name, args):
     np.savetxt(args.outputs + '/' + name + '.prob', y_pred, delimiter='\t')
 
     if args.plots:
-        try:
-            var = subprocess.Popen(["java", "-cp", "VARNAv3-93.jar", "fr.orsay.lri.varna.applications.VARNAcmd", '-i',
-                                    args.outputs + name + '.ct', '-o', args.outputs + name + '_radiate.png',
-                                    '-algorithm',
-                                    'radiate', '-resolution', '8.0', '-bpStyle', 'lw', '-auxBPs', tertiary_bp],
-                                   stderr=subprocess.STDOUT, stdout=subprocess.PIPE).communicate()[0]
-            var = subprocess.Popen(["java", "-cp", "VARNAv3-93.jar", "fr.orsay.lri.varna.applications.VARNAcmd", '-i',
-                                    args.outputs + name + '.ct', '-o', args.outputs + name + '_line.png', '-algorithm',
-                                    'line', '-resolution', '8.0', '-bpStyle', 'lw', '-auxBPs', tertiary_bp],
-                                   stderr=subprocess.STDOUT, stdout=subprocess.PIPE).communicate()[0]
-        except:
-            print(
-                '\nUnable to generate 2D plots;\nplease refer to "http://varna.lri.fr/" for system requirments to use '
-                'VARNA')
-
+        var = subprocess.Popen(["java", "-cp", "VARNAv3-93.jar", "fr.orsay.lri.varna.applications.VARNAcmd", '-i',
+                                args.outputs + name + '.ct', '-o', args.outputs + name + '_radiate.png',
+                                '-algorithm',
+                                'radiate', '-resolution', '8.0', '-bpStyle', 'lw', '-auxBPs', tertiary_bp],
+                               stderr=subprocess.STDOUT, stdout=subprocess.PIPE).communicate()[0]
+        var = subprocess.Popen(["java", "-cp", "VARNAv3-93.jar", "fr.orsay.lri.varna.applications.VARNAcmd", '-i',
+                                args.outputs + name + '.ct', '-o', args.outputs + name + '_line.png', '-algorithm',
+                                'line', '-resolution', '8.0', '-bpStyle', 'lw', '-auxBPs', tertiary_bp],
+                               stderr=subprocess.STDOUT, stdout=subprocess.PIPE).communicate()[0]
     if args.motifs:
-        try:
-            os.chdir(args.outputs)
-            subprocess.Popen(['perl', './bpRNA-master/bpRNA.pl', name + '.bpseq'])
-        except:
-            print(
-                '\nUnable to run bpRNA script;\nplease refer to "https://github.com/hendrixlab/bpRNA/" for system '
-                'requirments to use bpRNA')
-        os.chdir('../')
+        subprocess.Popen(['perl', base_path + '/bpRNA-master/bpRNA.pl', args.outputs + name + '.bpseq'])
     return

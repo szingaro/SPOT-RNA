@@ -9,6 +9,7 @@ from tqdm import tqdm
 from utils import create_tfr_files, prob_to_secondary_structure
 
 start = time.time()
+base_path = os.path.dirname(os.path.realpath(__file__))
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--inputs', default='sample_inputs/2zzm-B.fasta', type=str,
@@ -31,8 +32,8 @@ parser.add_argument('--motifs', default=False, type=bool,
                     help='Set this to "True" to get the motifs of predicted secondary structure by SPOT-RNA; default '
                          '= False\n',
                     metavar='')
-parser.add_argument('--NC',default=True, type=bool, help='Set this to "False" to predict only canonical pairs; '
-                                                         'default = True\n', metavar='')
+parser.add_argument('--NC', default=True, type=bool, help='Set this to "False" to predict only canonical pairs; '
+                                                          'default = True\n', metavar='')
 args = parser.parse_args()
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -54,7 +55,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 NUM_MODELS = 5
 
-test_loc = ["input_tfr_files/test_data.tfrecords"]
+test_loc = [base_path + "/input_tfr_files/test_data.tfrecords"]
 
 outputs = {}
 mask = {}
@@ -73,8 +74,8 @@ for MODEL in range(NUM_MODELS):
     # sess = tf.Session(config=session_conf)
     print('\nPredicting for SPOT-RNA model ' + str(MODEL))
     with tf.compat.v1.Session(config=config) as sess:
-        saver = tf.compat.v1.train.import_meta_graph('SPOT-RNA-models' + '/model' + str(MODEL) + '.meta')
-        saver.restore(sess, 'SPOT-RNA-models' + '/model' + str(MODEL))
+        saver = tf.compat.v1.train.import_meta_graph(base_path + '/SPOT-RNA-models' + '/model' + str(MODEL) + '.meta')
+        saver.restore(sess, base_path + '/SPOT-RNA-models' + '/model' + str(MODEL))
         graph = tf.compat.v1.get_default_graph()
         init_test = graph.get_operation_by_name('make_initializer_2')
         tmp_out = graph.get_tensor_by_name('output_FC/fully_connected/BiasAdd:0')
@@ -94,7 +95,7 @@ for MODEL in range(NUM_MODELS):
                     outputs[out[1]] = [sigmoid(out[0])]
                 else:
                     outputs[out[1]].append(sigmoid(out[0]))
-                print('RNA name: %s'%(out[1]))
+                print('RNA name: %s' % (out[1]))
                 pbar.update(1)
             except:
                 break
